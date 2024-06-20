@@ -1,4 +1,4 @@
-module org.example.iconmaker {
+module org.example {
     requires javafx.controls;
     requires javafx.fxml;
     requires javafx.base;
@@ -7,7 +7,6 @@ module org.example.iconmaker {
     requires javafx.swing;
     requires java.desktop;
 
-    opens org.example.iconmaker to javafx.fxml;
-    opens org.example to javafx.graphics;
-    exports org.example.iconmaker;
+    opens org.example to javafx.fxml, javafx.graphics;
+    exports org.example;
 }
