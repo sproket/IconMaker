@@ -3,20 +3,15 @@ package org.example;
 import javafx.application.Application;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.Scene;
-import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
-import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 
 import javax.imageio.ImageIO;
-import javax.security.auth.login.AppConfigurationEntry;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -30,8 +25,6 @@ import java.util.Objects;
 public class IconMaker extends Application {
 
     private Stage stage;
-
-    private Canvas canvas;
 
     private int bodyIndex = 0;
     private BufferedImage bodyImage;
@@ -64,26 +57,30 @@ public class IconMaker extends Application {
     int color5 = 0;        //metal color
     int color5max = 9;
 
+    ImageView icon;
+
     @Override
     public void start(Stage stage) throws Exception {
         this.stage = stage;
 
         BorderPane root = new BorderPane();
 
-        canvas = new Canvas(96, 48);
-        GraphicsContext gc = canvas.getGraphicsContext2D();
-
         bodyImage = ImageIO.read(Objects.requireNonNull(IconMaker.class.getResourceAsStream("/parts/cm_Clothes.png")));
         weaponImage = ImageIO.read(Objects.requireNonNull(IconMaker.class.getResourceAsStream("/parts/cm_Arms.png")));
         headImage = ImageIO.read(Objects.requireNonNull(IconMaker.class.getResourceAsStream("/parts/cm_Faces.png")));
-        shieldImage = ImageIO.read(Objects.requireNonNull(IconMaker.class.getResourceAsStream("/parts/cm_Shields-orig.png")));
+        shieldImage = ImageIO.read(Objects.requireNonNull(IconMaker.class.getResourceAsStream("/parts/cm_Shields.png")));
+
+        icon = new ImageView();
+        icon.setOpacity(1); // still white background
+        icon.setFitHeight(PART_HEIGHT * 2);
+        icon.setFitWidth(PART_WIDTH * 2);
+        icon.setPreserveRatio(true);
+        icon.setSmooth(false);
+        icon.setCache(true);
 
         refreshImage();
 
-        HBox hbox = new HBox();
-        hbox.getChildren().addAll(canvas);
-        root.setCenter(canvas);
-
+        root.setCenter(icon);
 
         HBox buttons = new HBox();
         buttons.setSpacing(10);
@@ -137,8 +134,10 @@ public class IconMaker extends Application {
         buttons.getChildren().addAll(new Button("Color 2"));
         buttons.getChildren().addAll(new Button("Metal"));
 
+        root.getStyleClass().add("panels");
         root.setBottom(buttons);
         Scene scene = new Scene(root, 800, 600);
+        scene.getStylesheets().add("/style.css");
         stage.setScene(scene);
         stage.setTitle("IconMaker");
         stage.show();
@@ -153,8 +152,9 @@ public class IconMaker extends Application {
         BufferedImage weapon = getImage(weaponIndex, weaponImage);
 
         composedImage = composeImage(shield, body, weapon, head);
-        Image fxImage = SwingFXUtils.toFXImage(composedImage, null);
-        canvas.getGraphicsContext2D().drawImage(fxImage, 0, 0);
+
+        java.awt.Image image1 = composedImage.getScaledInstance(PART_WIDTH * 2, PART_HEIGHT * 2, java.awt.Image.SCALE_DEFAULT);
+        icon.setImage(SwingFXUtils.toFXImage(toBufferedImage(image1), null));
     }
 
 
@@ -290,9 +290,8 @@ public class IconMaker extends Application {
             }
         }
 
-        Image fxImage = SwingFXUtils.toFXImage(composedImage, null);
-        canvas.getGraphicsContext2D().drawImage(fxImage, 0, 0);
-
+        java.awt.Image image1 = composedImage.getScaledInstance(PART_WIDTH * 2, PART_HEIGHT * 2, java.awt.Image.SCALE_DEFAULT);
+        icon.setImage(SwingFXUtils.toFXImage(toBufferedImage(image1), null));
     }
 
 
@@ -308,5 +307,23 @@ public class IconMaker extends Application {
         }
         g.dispose();
         return im;
+    }
+
+
+    public static BufferedImage toBufferedImage(java.awt.Image img) {
+        if (img instanceof BufferedImage) {
+            return (BufferedImage) img;
+        }
+
+        // Create a buffered image with transparency
+        BufferedImage bimage = new BufferedImage(img.getWidth(null), img.getHeight(null), BufferedImage.TYPE_INT_ARGB);
+
+        // Draw the image on to the buffered image
+        Graphics2D bGr = bimage.createGraphics();
+        bGr.drawImage(img, 0, 0, null);
+        bGr.dispose();
+
+        // Return the buffered image
+        return bimage;
     }
 }
